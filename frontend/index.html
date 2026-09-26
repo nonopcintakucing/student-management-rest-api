@@ -78,12 +78,12 @@
         </div>
     </div>
 
-    <button
-        class="flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-primary-container text-on-primary text-[11px] font-mono active:scale-95 shadow-sm hover:opacity-95"
-        onclick="openStudentFormModal()">
-        <span class="material-symbols-outlined text-[16px]">person_add</span>
-        <span>Tambah</span>
-    </button>
+   <button
+    class="flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-primary-container text-on-primary text-[11px] font-mono active:scale-95 shadow-sm hover:opacity-95"
+    onclick="window.history.back()">
+    <span class="material-symbols-outlined text-[16px]">logout</span>
+    <span>Keluar</span>
+</button>
 </header>
 
 <main class="flex-1 px-4 pt-3 pb-10 max-w-md md:max-w-4xl lg:max-w-6xl mx-auto w-full space-y-3.5 lg:px-8">
@@ -258,7 +258,7 @@
     <span id="toastMessage">Tersimpan</span>
 </div>
 
-<!-- <script>
+<script>
     const API_URL = 'http://localhost:3000/api/siswa';
 
     let allStudents = [];
@@ -359,24 +359,23 @@
     // =========================
     // DELETE - hapus siswa
     // =========================
-    function deleteStudent(id, name) {
-        if (!confirm(`Hapus data siswa "${name}"?`)) {
-            return;
-        }
-
-        $.ajax({
-            url: `${API_URL}/${id}`,
-            method: 'DELETE'
-        })
-        .done(function(response) {
-            showToast(response.message || 'Data siswa berhasil dihapus', true);
-            fetchStudents();
-        })
-        .fail(function(xhr) {
-            const msg = xhr.responseJSON?.message || 'Gagal menghapus siswa';
-            showToast(msg, false);
-        });
+    function deleteStudent(id) {
+    if (!confirm('Apakah kamu yakin ingin menghapus data siswa ini?')) {
+        return;
     }
+
+    $.ajax({
+        url: API_URL + '/' + id,
+        type: 'DELETE',
+        success: function(response) {
+            showToast('Data siswa berhasil dihapus', 'success');
+            loadStudents();
+        },
+        error: function() {
+            showToast('Gagal menghapus data siswa', 'error');
+        }
+    });
+}
 
     // =========================
     // RENDER DATA
@@ -631,7 +630,6 @@
     $(document).ready(function() {
         fetchStudents();
     });
-</script>
-<!--  -->
+</script> 
 </body>
 </html>
