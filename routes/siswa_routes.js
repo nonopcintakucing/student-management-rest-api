@@ -3,7 +3,7 @@ const router = express.Router()
 const db = require('../config/database')
 
 // GET semua data siswa
-router.get('/siswa', async (req, res) => {
+router.get('/', async (req, res) => {
     try {
         const [rows] = await db.promise().query('SELECT * FROM siswa')
 
@@ -18,7 +18,7 @@ router.get('/siswa', async (req, res) => {
 })
 
 // GET data siswa berdasarkan ID
-router.get('/siswa/:id', async (req, res) => {
+router.get('/:id', async (req, res) => {
     try {
         const { id } = req.params
 
@@ -44,7 +44,7 @@ router.get('/siswa/:id', async (req, res) => {
     }
 })
 
-router.post('/siswa', async (req, res) => {
+router.post('/', async (req, res) => {
     try {
         const { nis, nama, kelas, jurusan, alamat } = req.body
 
@@ -84,7 +84,7 @@ router.post('/siswa', async (req, res) => {
 })
 
 // PUT edit data siswa
-router.put('/siswa/:id', async (req, res) => {
+router.put('/:id', async (req, res) => {
     try {
         const { id } = req.params
         const { nis, nama, kelas, jurusan, alamat } = req.body
@@ -132,7 +132,7 @@ router.put('/siswa/:id', async (req, res) => {
 })
 
 // DELETE hapus data siswa
-router.delete('/siswa/:id', async (req, res) => {
+router.delete('/:id', async (req, res) => {
     try {
         const { id } = req.params
 

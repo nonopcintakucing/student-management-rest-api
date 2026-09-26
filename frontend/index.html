@@ -147,27 +147,8 @@
                     class="w-full pl-9 pr-9 py-2 bg-surface-container-lowest rounded-xl border border-outline-variant/50 text-sm text-on-surface placeholder:text-outline focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary shadow-sm"/>
             </div>
 
-            <div class="flex items-center gap-1.5 overflow-x-auto custom-scrollbar pb-0.5 pt-0.5">
-                <button
-                    class="filter-chip active-filter px-3 py-1 rounded-full text-[10px] font-mono border bg-primary-container text-on-primary border-primary-container font-semibold shadow-sm"
-                    data-filter="Semua"
-                    onclick="setFilter('Semua', this)">
-                    Semua (0)
-                </button>
-
-                <button
-                    class="filter-chip px-3 py-1 rounded-full text-[10px] font-mono border border-outline-variant/60 bg-surface-container-lowest text-on-surface-variant hover:bg-surface-container-low"
-                    data-filter="XII RPL"
-                    onclick="setFilter('XII RPL', this)">
-                    XII RPL (0)
-                </button>
-
-                <button
-                    class="filter-chip px-3 py-1 rounded-full text-[10px] font-mono border border-outline-variant/60 bg-surface-container-lowest text-on-surface-variant hover:bg-surface-container-low"
-                    data-filter="XI RPL"
-                    onclick="setFilter('XI RPL', this)">
-                    XI RPL (0)
-                </button>
+            <div id="filterChipsContainer" class="flex items-center gap-1.5 overflow-x-auto custom-scrollbar pb-0.5 pt-0.5">
+                <!-- Filter chip dibuat otomatis lewat JS berdasarkan kelas yang benar-benar ada di data -->
             </div>
         </section>
     </div>
@@ -316,6 +297,35 @@ async function createStudent(payload) {
 }
 
     // =========================
+    // PUT - update siswa
+    // =========================
+    async function updateStudent(id, payload) {
+    try {
+        const response = await fetch(`${API_URL}/${id}`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(payload)
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+            throw new Error(data.message || 'Gagal memperbarui siswa');
+        }
+
+        showToast(data.message || 'Data siswa berhasil diperbarui', true);
+        closeStudentFormModal();
+        fetchStudents();
+
+    } catch (error) {
+        console.error(error);
+        showToast(error.message || 'Gagal memperbarui siswa', false);
+    }
+}
+
+    // =========================
     // DELETE - hapus siswa
     // =========================
     async function deleteStudent(id, name) {
@@ -440,21 +450,55 @@ async function createStudent(payload) {
             container.html(students.map(studentCardHtml).join(''));
         }
 
-        updateFilterCounts(students || []);
+        renderFilterChips(students || []);
         applySearch();
     }
 
     // =========================
     // FILTER
     // =========================
-    function updateFilterCounts(students) {
-        const total = students.length;
-        const kelasXii = students.filter(s => (s.kelas || '').toUpperCase() === 'XII RPL').length;
-        const kelasXi = students.filter(s => (s.kelas || '').toUpperCase() === 'XI RPL').length;
+    function renderFilterChips(students) {
+        // Ambil daftar kelas unik langsung dari data (bukan hardcode),
+        // supaya kelas baru yang ditambahkan otomatis punya chip filter-nya.
+        const kelasSet = new Set();
+        students.forEach(s => {
+            const k = (s.kelas || '').trim();
+            if (k) kelasSet.add(k);
+        });
+        const kelasList = Array.from(kelasSet).sort();
 
-        $('[data-filter="Semua"]').text(`Semua (${total})`);
-        $('[data-filter="XII RPL"]').text(`XII RPL (${kelasXii})`);
-        $('[data-filter="XI RPL"]').text(`XI RPL (${kelasXi})`);
+        const chips = [{ label: 'Semua', count: students.length }].concat(
+            kelasList.map(k => ({
+                label: k,
+                count: students.filter(s => (s.kelas || '').trim().toLowerCase() === k.toLowerCase()).length
+            }))
+        );
+
+        // Kalau filter yang lagi aktif ternyata sudah tidak ada di data
+        // (misal siswa dengan kelas itu sudah dihapus semua), balik ke 'Semua'
+        // supaya data tidak "hilang" dari tampilan tanpa alasan yang jelas ke user.
+        const stillExists = chips.some(c => c.label === activeFilter);
+        if (!stillExists) {
+            activeFilter = 'Semua';
+        }
+
+        const container = $('#filterChipsContainer');
+        container.empty();
+
+        chips.forEach(chip => {
+            const isActive = chip.label === activeFilter;
+            const btn = $('<button></button>')
+                .attr('data-filter', chip.label)
+                .attr('class', isActive
+                    ? 'filter-chip active-filter px-3 py-1 rounded-full text-[10px] font-mono border bg-primary-container text-on-primary border-primary-container font-semibold shadow-sm whitespace-nowrap'
+                    : 'filter-chip px-3 py-1 rounded-full text-[10px] font-mono border border-outline-variant/60 bg-surface-container-lowest text-on-surface-variant hover:bg-surface-container-low transition-all whitespace-nowrap font-medium')
+                .text(`${chip.label} (${chip.count})`)
+                .on('click', function() {
+                    setFilter(chip.label, this);
+                });
+
+            container.append(btn);
+        });
     }
 
     function setFilter(type, btn) {
