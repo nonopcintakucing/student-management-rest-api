@@ -267,114 +267,80 @@
     // =========================
     // GET - ambil semua siswa
     // =========================
-    function fetchStudents() {
-        const icon = $('#fetchIcon');
-        const latencyBadge = $('#latencyBadge');
-        const statusBadge = $('#statusBadge');
-        const start = performance.now();
+    async function fetchStudents() {
+    try {
+        const response = await fetch(API_URL);
 
-        icon.addClass('animate-spin');
-        statusBadge.text('Menghubungi...');
-        statusBadge.attr('class',
-            'text-[10px] font-mono text-amber-700 bg-amber-50 border border-amber-200 px-1.5 py-0.5 rounded-full');
+        if (!response.ok) {
+            throw new Error('Gagal mengambil data siswa');
+        }
 
-        $.ajax({
-            url: API_URL,
-            method: 'GET',
-            dataType: 'json',
-            timeout: 10000
-        })
-        .done(function(response) {
-            const ms = Math.round(performance.now() - start);
+        const students = await response.json();
 
-            icon.removeClass('animate-spin');
-            latencyBadge.text(ms + 'ms');
-            statusBadge.text('200 OK');
+       allStudents = students;
+        renderStudents(students);
 
-            // Backend kita mengembalikan array langsung
-            allStudents = Array.isArray(response) ? response : (response.data || []);
-
-            renderStudents(allStudents);
-
-            showToast(`Data siswa berhasil dimuat (${allStudents.length} siswa)`, true);
-        })
-        .fail(function(xhr) {
-            icon.removeClass('animate-spin');
-
-            latencyBadge.text('gagal');
-            statusBadge.text(xhr.status ? xhr.status + ' Error' : 'No Response');
-
-            let msg = 'Gagal mengambil data siswa';
-
-            if (xhr.responseJSON && xhr.responseJSON.message) {
-                msg = xhr.responseJSON.message;
-            }
-
-            showToast(msg, false);
-        });
+    } catch (error) {
+        console.error(error);
+        showToast('Gagal mengambil data siswa', false);
     }
+}
 
-    // =========================
-    // POST - tambah siswa
-    // =========================
-    function createStudent(payload) {
-        $.ajax({
-            url: API_URL,
+  // =========================
+// POST - tambah siswa
+// =========================
+async function createStudent(payload) {
+    try {
+        const response = await fetch(API_URL, {
             method: 'POST',
-            contentType: 'application/json',
-            data: JSON.stringify(payload)
-        })
-        .done(function(response) {
-            showToast(response.message || 'Data siswa berhasil ditambahkan', true);
-            closeStudentFormModal();
-            fetchStudents();
-        })
-        .fail(function(xhr) {
-            const msg = xhr.responseJSON?.message || 'Gagal menambah siswa';
-            showToast(msg, false);
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(payload)
         });
-    }
 
-    // =========================
-    // PUT - edit siswa
-    // =========================
-    function updateStudent(id, payload) {
-        $.ajax({
-            url: `${API_URL}/${id}`,
-            method: 'PUT',
-            contentType: 'application/json',
-            data: JSON.stringify(payload)
-        })
-        .done(function(response) {
-            showToast(response.message || 'Data siswa berhasil diperbarui', true);
-            closeStudentFormModal();
-            fetchStudents();
-        })
-        .fail(function(xhr) {
-            const msg = xhr.responseJSON?.message || 'Gagal memperbarui siswa';
-            showToast(msg, false);
-        });
+        const data = await response.json();
+
+        if (!response.ok) {
+            throw new Error(data.message || 'Gagal menambahkan siswa');
+        }
+
+        showToast(data.message || 'Data siswa berhasil ditambahkan', true);
+        closeStudentFormModal();
+        fetchStudents();
+
+    } catch (error) {
+        console.error(error);
+        showToast(error.message || 'Gagal menambahkan siswa', false);
     }
+}
 
     // =========================
     // DELETE - hapus siswa
     // =========================
-    function deleteStudent(id) {
-    if (!confirm('Apakah kamu yakin ingin menghapus data siswa ini?')) {
+    async function deleteStudent(id, name) {
+    if (!confirm(`Hapus data siswa "${name}"?`)) {
         return;
     }
 
-    $.ajax({
-        url: API_URL + '/' + id,
-        type: 'DELETE',
-        success: function(response) {
-            showToast('Data siswa berhasil dihapus', 'success');
-            loadStudents();
-        },
-        error: function() {
-            showToast('Gagal menghapus data siswa', 'error');
+    try {
+        const response = await fetch(`${API_URL}/${id}`, {
+            method: 'DELETE'
+        });
+
+        const data = await response.json();
+
+        if (!response.ok) {
+            throw new Error(data.message || 'Gagal menghapus siswa');
         }
-    });
+
+        showToast(data.message || 'Data siswa berhasil dihapus', true);
+        fetchStudents();
+
+    } catch (error) {
+        console.error(error);
+        showToast(error.message || 'Gagal menghapus siswa', false);
+    }
 }
 
     // =========================
