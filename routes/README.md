@@ -1,8 +1,11 @@
+
 # Manajemen Data Siswa
 
 ## 1. Nama Aplikasi
 
 **Manajemen Data Siswa**
+
+Aplikasi Manajemen Data Siswa adalah aplikasi yang digunakan untuk mengelola data siswa secara digital. Aplikasi ini memungkinkan pengguna untuk melihat, menambahkan, mengubah, menghapus, dan mencari data siswa. Data yang dikelola meliputi NIS, nama, kelas, jurusan, dan alamat siswa. Aplikasi ini menggunakan frontend sebagai tampilan antarmuka, REST API sebagai penghubung antara frontend dan backend, serta database MySQL untuk menyimpan data siswa.
 
 ---
 
@@ -153,11 +156,11 @@ Contoh data:
 
 ```json
 {
-  "nis": "12345678",
-  "nama": "Budi Santoso",
+  "nis": "242510069",
+  "nama": "Novita Damayanti",
   "kelas": "XII RPL",
-  "jurusan": "RPL",
-  "alamat": "Tangerang Selatan"
+  "jurusan": "Rekayasa Perangkat Lunak",
+  "alamat": "Kp. Sadangan"
 }
 ```
 
@@ -187,7 +190,7 @@ Masukkan screenshot tampilan utama aplikasi Manajemen Data Siswa di bawah ini.
 
 **Screenshot Frontend:**
 
-![Tampilan Aplikasi](screenshots/frontend.png)
+![Tampilan Aplikasi](screenshots/frontend.png)![1790417773933](image/README/1790417773933.png)
 
 ### Pengujian REST API
 
@@ -195,11 +198,25 @@ Masukkan screenshot hasil pengujian endpoint REST API menggunakan Postman atau T
 
 **Screenshot Pengujian API:**
 
-![Pengujian REST API](screenshots/api-testing.png)
+![1790417939310](image/README/1790417939310.png)
 
-> Nama dan lokasi file screenshot dapat disesuaikan dengan file gambar yang dimasukkan ke repository GitHub.
+> GET DataSiswa
 
----
+![1790417968006](image/README/1790417968006.png)
+
+POST Siswa
+
+![1790418005956](image/README/1790418005956.png)
+
+PUT Siswa
+
+![1790418097045](image/README/1790418097045.png)
+
+GET Siswa by ID
+
+![1790418138361](image/README/1790418138361.png)
+
+DELETE Siswa
 
 ## 8. Identitas Pembuat
 
