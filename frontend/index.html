@@ -1,0 +1,637 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>Manajemen Data Siswa</title>
+
+    <link href="https://fonts.googleapis.com" rel="preconnect"/>
+    <link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+    <link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+    <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+    <script src="/node_modules/jquery/dist/jquery.min.js"></script>
+
+    <script>
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "surface-container-lowest": "#ffffff",
+                        "surface-container-low": "#eff4ff",
+                        "surface-container": "#e5eeff",
+                        "surface-container-high": "#dce9ff",
+                        "primary-container": "#4f46e5",
+                        "primary": "#3525cd",
+                        "on-primary": "#ffffff",
+                        "background": "#f8f9ff",
+                        "on-surface": "#0b1c30",
+                        "on-surface-variant": "#464555",
+                        "outline": "#777587",
+                        "outline-variant": "#c7c4d8",
+                        "error": "#ba1a1a",
+                        "error-container": "#ffdad6"
+                    },
+                    borderRadius: {
+                        DEFAULT: "0.25rem",
+                        lg: "0.5rem",
+                        xl: "0.75rem",
+                        full: "9999px"
+                    },
+                    fontFamily: {
+                        body: ["Geist"],
+                        mono: ["JetBrains Mono"]
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+            line-height: 1;
+            display: inline-block;
+        }
+        .custom-scrollbar::-webkit-scrollbar { display: none; }
+        .custom-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        .modal-overlay { background: rgba(0,0,0,0.5); }
+    </style>
+</head>
+
+<body class="bg-background text-on-surface antialiased min-h-screen flex flex-col">
+
+<header class="sticky top-0 z-40 bg-surface-container-lowest shadow-sm flex justify-between items-center w-full px-4 lg:px-8 h-14 border-b border-outline-variant/30">
+    <div class="flex items-center gap-2.5">
+        <div class="w-8 h-8 rounded-lg bg-surface-container-low flex items-center justify-center text-primary">
+            <span class="material-symbols-outlined text-[20px]">school</span>
+        </div>
+        <div>
+            <h1 class="text-[18px] font-semibold leading-tight">Manajemen Data Siswa</h1>
+            <div class="flex items-center gap-1.5 mt-0.5">
+                <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                <span class="text-[10px] font-mono text-on-surface-variant uppercase tracking-wider">
+                    Express API - /api/siswa
+                </span>
+            </div>
+        </div>
+    </div>
+
+    <button
+        class="flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-primary-container text-on-primary text-[11px] font-mono active:scale-95 shadow-sm hover:opacity-95"
+        onclick="openStudentFormModal()">
+        <span class="material-symbols-outlined text-[16px]">person_add</span>
+        <span>Tambah</span>
+    </button>
+</header>
+
+<main class="flex-1 px-4 pt-3 pb-10 max-w-md md:max-w-4xl lg:max-w-6xl mx-auto w-full space-y-3.5 lg:px-8">
+
+    <div class="flex flex-col md:flex-row gap-3.5 md:items-start">
+
+        <!-- REST TARGET -->
+        <section class="bg-surface-container-lowest rounded-xl p-3.5 border border-outline-variant/40 shadow-sm relative overflow-hidden md:w-[380px] md:shrink-0">
+            <div class="flex items-center justify-between pb-2 mb-2 border-b border-surface-container">
+                <div class="flex items-center gap-1.5">
+                    <span class="text-[10px] font-mono text-primary font-semibold tracking-wide">REST TARGET</span>
+                    <span class="px-1.5 py-0.5 rounded bg-surface-container text-on-surface-variant text-[10px] font-mono">GET</span>
+                </div>
+
+                <div class="flex items-center gap-1">
+                    <span id="latencyBadge" class="text-[10px] font-mono text-emerald-700 bg-emerald-50 border border-emerald-200 px-1.5 py-0.5 rounded-full">
+                        --ms
+                    </span>
+                    <span id="statusBadge" class="text-[10px] font-mono text-blue-700 bg-blue-50 border border-blue-200 px-1.5 py-0.5 rounded-full">
+                        Belum fetch
+                    </span>
+                </div>
+            </div>
+
+            <div class="flex items-center justify-between bg-surface-container-low rounded-lg px-2.5 py-1.5 font-mono text-[11px] text-on-surface mb-2.5 border border-outline-variant/30">
+                <div class="truncate flex items-center gap-1">
+                    <span class="text-outline-variant">URL:</span>
+                    <span id="urlPreviewText" class="text-on-surface font-semibold truncate">
+                        http://localhost:3000/api/siswa
+                    </span>
+                </div>
+            </div>
+
+            <div class="flex items-center gap-2">
+                <button
+                    id="fetchBtn"
+                    onclick="fetchStudents()"
+                    class="flex-1 flex items-center justify-center gap-1.5 py-2 px-3 rounded-lg bg-primary-container text-on-primary text-sm font-medium shadow-sm hover:opacity-90 active:scale-95">
+                    <span class="material-symbols-outlined text-[18px]" id="fetchIcon">refresh</span>
+                    <span>Fetch Data</span>
+                </button>
+
+                <button
+                    onclick="openStudentFormModal()"
+                    class="flex items-center justify-center p-2 rounded-lg border border-outline-variant/60 bg-surface text-on-surface hover:bg-surface-container-low active:scale-95"
+                    title="Tambah Siswa">
+                    <span class="material-symbols-outlined text-[20px]">person_add</span>
+                </button>
+            </div>
+        </section>
+
+        <!-- SEARCH -->
+        <section class="space-y-2 flex-1 md:pt-1">
+            <div class="relative flex items-center">
+                <span class="material-symbols-outlined absolute left-3 text-outline text-[18px]">search</span>
+                <input
+                    id="searchInput"
+                    onkeyup="filterStudents()"
+                    placeholder="Cari nama, NIS, kelas, atau jurusan..."
+                    type="text"
+                    class="w-full pl-9 pr-9 py-2 bg-surface-container-lowest rounded-xl border border-outline-variant/50 text-sm text-on-surface placeholder:text-outline focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary shadow-sm"/>
+            </div>
+
+            <div class="flex items-center gap-1.5 overflow-x-auto custom-scrollbar pb-0.5 pt-0.5">
+                <button
+                    class="filter-chip active-filter px-3 py-1 rounded-full text-[10px] font-mono border bg-primary-container text-on-primary border-primary-container font-semibold shadow-sm"
+                    data-filter="Semua"
+                    onclick="setFilter('Semua', this)">
+                    Semua (0)
+                </button>
+
+                <button
+                    class="filter-chip px-3 py-1 rounded-full text-[10px] font-mono border border-outline-variant/60 bg-surface-container-lowest text-on-surface-variant hover:bg-surface-container-low"
+                    data-filter="XII RPL"
+                    onclick="setFilter('XII RPL', this)">
+                    XII RPL (0)
+                </button>
+
+                <button
+                    class="filter-chip px-3 py-1 rounded-full text-[10px] font-mono border border-outline-variant/60 bg-surface-container-lowest text-on-surface-variant hover:bg-surface-container-low"
+                    data-filter="XI RPL"
+                    onclick="setFilter('XI RPL', this)">
+                    XI RPL (0)
+                </button>
+            </div>
+        </section>
+    </div>
+
+    <!-- DATA SISWA -->
+    <section class="space-y-2.5">
+        <div class="flex items-center justify-between px-1">
+            <span class="text-[10px] font-mono text-on-surface-variant uppercase tracking-wider font-semibold">
+                Student Entities
+            </span>
+            <span class="text-[10px] font-mono text-outline" id="renderedCount">
+                Belum ada data
+            </span>
+        </div>
+
+        <div id="studentDirectoryList" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2.5">
+            <div id="emptyState" class="text-center py-8 text-sm text-outline col-span-full">
+                Klik "Fetch Data" untuk mengambil data dari /api/siswa.
+            </div>
+        </div>
+    </section>
+</main>
+
+<!-- MODAL TAMBAH / EDIT -->
+<div class="fixed inset-0 z-50 modal-overlay flex items-center justify-center p-4 hidden" id="studentFormModal">
+    <div class="w-full max-w-sm bg-surface-container-lowest rounded-2xl shadow-2xl overflow-hidden border border-outline-variant/40">
+
+        <div class="flex items-center justify-between px-4 py-3 border-b border-surface-container">
+            <h3 class="text-sm font-semibold" id="studentFormTitle">Tambah Siswa</h3>
+
+            <button onclick="closeStudentFormModal()" class="text-outline hover:text-on-surface p-1 rounded">
+                <span class="material-symbols-outlined text-[20px]">close</span>
+            </button>
+        </div>
+
+        <div class="p-4 space-y-3">
+            <input type="hidden" id="formStudentId"/>
+
+            <div>
+                <label class="text-[10px] font-mono text-on-surface-variant mb-1 block">NIS</label>
+                <input id="formNis" type="text"
+                    class="w-full text-sm px-2.5 py-2 rounded-md border border-outline-variant bg-surface focus:outline-none focus:ring-1 focus:ring-primary"/>
+            </div>
+
+            <div>
+                <label class="text-[10px] font-mono text-on-surface-variant mb-1 block">Nama</label>
+                <input id="formNama" type="text"
+                    class="w-full text-sm px-2.5 py-2 rounded-md border border-outline-variant bg-surface focus:outline-none focus:ring-1 focus:ring-primary"/>
+            </div>
+
+            <div>
+                <label class="text-[10px] font-mono text-on-surface-variant mb-1 block">Kelas</label>
+                <input id="formKelas" type="text" placeholder="Contoh: XII RPL"
+                    class="w-full text-sm px-2.5 py-2 rounded-md border border-outline-variant bg-surface focus:outline-none focus:ring-1 focus:ring-primary"/>
+            </div>
+
+            <div>
+                <label class="text-[10px] font-mono text-on-surface-variant mb-1 block">Jurusan</label>
+                <input id="formJurusan" type="text" placeholder="Contoh: RPL"
+                    class="w-full text-sm px-2.5 py-2 rounded-md border border-outline-variant bg-surface focus:outline-none focus:ring-1 focus:ring-primary"/>
+            </div>
+
+            <div>
+                <label class="text-[10px] font-mono text-on-surface-variant mb-1 block">Alamat</label>
+                <textarea id="formAlamat" rows="2"
+                    class="w-full text-sm px-2.5 py-2 rounded-md border border-outline-variant bg-surface focus:outline-none focus:ring-1 focus:ring-primary"></textarea>
+            </div>
+        </div>
+
+        <div class="p-4 pt-0 flex gap-2">
+            <button onclick="closeStudentFormModal()"
+                class="flex-1 py-2 rounded-lg border border-outline-variant text-on-surface-variant text-sm font-medium hover:bg-surface-container-low">
+                Batal
+            </button>
+
+            <button onclick="submitStudentForm()"
+                class="flex-1 py-2 rounded-lg bg-primary-container text-on-primary text-sm font-medium hover:opacity-90">
+                Simpan
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- TOAST -->
+<div id="toast"
+    class="fixed top-16 left-1/2 -translate-x-1/2 z-50 bg-slate-900 text-white px-3.5 py-2 rounded-lg shadow-lg text-[11px] font-mono flex items-center gap-2 opacity-0 pointer-events-none transition-all duration-300">
+    <span id="toastIcon" class="material-symbols-outlined text-[16px] text-emerald-400">check_circle</span>
+    <span id="toastMessage">Tersimpan</span>
+</div>
+
+<!-- <script>
+    const API_URL = 'http://localhost:3000/api/siswa';
+
+    let allStudents = [];
+    let activeFilter = 'Semua';
+
+    // =========================
+    // GET - ambil semua siswa
+    // =========================
+    function fetchStudents() {
+        const icon = $('#fetchIcon');
+        const latencyBadge = $('#latencyBadge');
+        const statusBadge = $('#statusBadge');
+        const start = performance.now();
+
+        icon.addClass('animate-spin');
+        statusBadge.text('Menghubungi...');
+        statusBadge.attr('class',
+            'text-[10px] font-mono text-amber-700 bg-amber-50 border border-amber-200 px-1.5 py-0.5 rounded-full');
+
+        $.ajax({
+            url: API_URL,
+            method: 'GET',
+            dataType: 'json',
+            timeout: 10000
+        })
+        .done(function(response) {
+            const ms = Math.round(performance.now() - start);
+
+            icon.removeClass('animate-spin');
+            latencyBadge.text(ms + 'ms');
+            statusBadge.text('200 OK');
+
+            // Backend kita mengembalikan array langsung
+            allStudents = Array.isArray(response) ? response : (response.data || []);
+
+            renderStudents(allStudents);
+
+            showToast(`Data siswa berhasil dimuat (${allStudents.length} siswa)`, true);
+        })
+        .fail(function(xhr) {
+            icon.removeClass('animate-spin');
+
+            latencyBadge.text('gagal');
+            statusBadge.text(xhr.status ? xhr.status + ' Error' : 'No Response');
+
+            let msg = 'Gagal mengambil data siswa';
+
+            if (xhr.responseJSON && xhr.responseJSON.message) {
+                msg = xhr.responseJSON.message;
+            }
+
+            showToast(msg, false);
+        });
+    }
+
+    // =========================
+    // POST - tambah siswa
+    // =========================
+    function createStudent(payload) {
+        $.ajax({
+            url: API_URL,
+            method: 'POST',
+            contentType: 'application/json',
+            data: JSON.stringify(payload)
+        })
+        .done(function(response) {
+            showToast(response.message || 'Data siswa berhasil ditambahkan', true);
+            closeStudentFormModal();
+            fetchStudents();
+        })
+        .fail(function(xhr) {
+            const msg = xhr.responseJSON?.message || 'Gagal menambah siswa';
+            showToast(msg, false);
+        });
+    }
+
+    // =========================
+    // PUT - edit siswa
+    // =========================
+    function updateStudent(id, payload) {
+        $.ajax({
+            url: `${API_URL}/${id}`,
+            method: 'PUT',
+            contentType: 'application/json',
+            data: JSON.stringify(payload)
+        })
+        .done(function(response) {
+            showToast(response.message || 'Data siswa berhasil diperbarui', true);
+            closeStudentFormModal();
+            fetchStudents();
+        })
+        .fail(function(xhr) {
+            const msg = xhr.responseJSON?.message || 'Gagal memperbarui siswa';
+            showToast(msg, false);
+        });
+    }
+
+    // =========================
+    // DELETE - hapus siswa
+    // =========================
+    function deleteStudent(id, name) {
+        if (!confirm(`Hapus data siswa "${name}"?`)) {
+            return;
+        }
+
+        $.ajax({
+            url: `${API_URL}/${id}`,
+            method: 'DELETE'
+        })
+        .done(function(response) {
+            showToast(response.message || 'Data siswa berhasil dihapus', true);
+            fetchStudents();
+        })
+        .fail(function(xhr) {
+            const msg = xhr.responseJSON?.message || 'Gagal menghapus siswa';
+            showToast(msg, false);
+        });
+    }
+
+    // =========================
+    // RENDER DATA
+    // =========================
+    function initials(name) {
+        return (name || '?')
+            .split(' ')
+            .filter(Boolean)
+            .slice(0, 2)
+            .map(word => word[0].toUpperCase())
+            .join('');
+    }
+
+    function studentCardHtml(siswa) {
+        const id = siswa.id;
+        const nis = siswa.nis || '-';
+        const nama = siswa.nama || 'Tanpa Nama';
+        const kelas = siswa.kelas || '-';
+        const jurusan = siswa.jurusan || '-';
+        const alamat = siswa.alamat || '-';
+
+        return `
+            <article
+                class="student-card bg-surface-container-lowest rounded-xl p-3.5 border border-outline-variant/40 shadow-sm hover:border-primary/40 transition-all"
+                data-id="${id}"
+                data-nis="${nis.toLowerCase()}"
+                data-nama="${nama.toLowerCase()}"
+                data-kelas="${kelas.toLowerCase()}"
+                data-jurusan="${jurusan.toLowerCase()}">
+
+                <div class="flex items-start justify-between">
+                    <div class="flex items-start gap-3">
+
+                        <div class="w-10 h-10 rounded-xl bg-surface-container-high text-primary font-bold flex items-center justify-center text-sm border border-primary/20 shrink-0">
+                            ${initials(nama)}
+                        </div>
+
+                        <div class="min-w-0">
+                            <div class="flex items-center gap-1.5 flex-wrap">
+                                <h2 class="text-sm font-semibold text-on-surface">${nama}</h2>
+
+                                <span class="px-2 py-0.5 rounded-full text-[10px] font-mono bg-blue-50 text-blue-700 border border-blue-200">
+                                    ${kelas}
+                                </span>
+                            </div>
+
+                            <p class="text-xs text-outline mt-0.5">
+                                NIS: ${nis}
+                            </p>
+
+                            <div class="flex items-center gap-2 mt-1 flex-wrap">
+                                <span class="text-[10px] font-mono text-outline">
+                                    #SISWA-${id}
+                                </span>
+                                <span class="text-[10px] font-mono text-outline">
+                                    ${jurusan}
+                                </span>
+                            </div>
+
+                            <p class="text-xs text-on-surface-variant mt-2">
+                                ${alamat}
+                            </p>
+                        </div>
+                    </div>
+
+                    <div class="flex items-center gap-0.5 shrink-0">
+                        <button
+                            class="p-1.5 rounded-lg text-outline hover:text-primary hover:bg-surface-container-low transition-colors"
+                            onclick='openStudentFormModal(${JSON.stringify(siswa)})'
+                            title="Ubah Siswa">
+                            <span class="material-symbols-outlined text-[18px]">edit</span>
+                        </button>
+
+                        <button
+                            class="p-1.5 rounded-lg text-outline hover:text-error hover:bg-error-container/40 transition-colors"
+                            onclick='deleteStudent(${id}, ${JSON.stringify(nama)})'
+                            title="Hapus Siswa">
+                            <span class="material-symbols-outlined text-[18px]">delete</span>
+                        </button>
+                    </div>
+                </div>
+            </article>
+        `;
+    }
+
+    function renderStudents(students) {
+        const container = $('#studentDirectoryList');
+
+        if (!students || students.length === 0) {
+            container.html(`
+                <div class="text-center py-8 text-sm text-outline col-span-full">
+                    Tidak ada data siswa dari API.
+                </div>
+            `);
+        } else {
+            container.html(students.map(studentCardHtml).join(''));
+        }
+
+        updateFilterCounts(students || []);
+        applySearch();
+    }
+
+    // =========================
+    // FILTER
+    // =========================
+    function updateFilterCounts(students) {
+        const total = students.length;
+        const kelasXii = students.filter(s => (s.kelas || '').toUpperCase() === 'XII RPL').length;
+        const kelasXi = students.filter(s => (s.kelas || '').toUpperCase() === 'XI RPL').length;
+
+        $('[data-filter="Semua"]').text(`Semua (${total})`);
+        $('[data-filter="XII RPL"]').text(`XII RPL (${kelasXii})`);
+        $('[data-filter="XI RPL"]').text(`XI RPL (${kelasXi})`);
+    }
+
+    function setFilter(type, btn) {
+        activeFilter = type;
+
+        $('.filter-chip').each(function() {
+            $(this).attr(
+                'class',
+                'filter-chip px-3 py-1 rounded-full text-[10px] font-mono border border-outline-variant/60 bg-surface-container-lowest text-on-surface-variant hover:bg-surface-container-low transition-all whitespace-nowrap font-medium'
+            );
+        });
+
+        $(btn).attr(
+            'class',
+            'filter-chip active-filter px-3 py-1 rounded-full text-[10px] font-mono border bg-primary-container text-on-primary border-primary-container font-semibold shadow-sm'
+        );
+
+        applySearch();
+    }
+
+    function filterStudents() {
+        applySearch();
+    }
+
+    function applySearch() {
+        const query = $('#searchInput').val().toLowerCase();
+        const cards = $('.student-card');
+        let visible = 0;
+
+        cards.each(function() {
+            const card = $(this);
+
+            const nis = card.attr('data-nis');
+            const nama = card.attr('data-nama');
+            const kelas = card.attr('data-kelas');
+            const jurusan = card.attr('data-jurusan');
+
+            const matchesFilter =
+                activeFilter === 'Semua' ||
+                kelas === activeFilter.toLowerCase();
+
+            const matchesSearch =
+                !query ||
+                nis.includes(query) ||
+                nama.includes(query) ||
+                kelas.includes(query) ||
+                jurusan.includes(query);
+
+            const match = matchesFilter && matchesSearch;
+
+            card.toggleClass('hidden', !match);
+
+            if (match) {
+                visible++;
+            }
+        });
+
+        $('#renderedCount').text(`Menampilkan ${visible} dari ${allStudents.length} siswa`);
+    }
+
+    // =========================
+    // FORM TAMBAH / EDIT
+    // =========================
+    function openStudentFormModal(siswa) {
+        $('#formNis').val('');
+        $('#formNama').val('');
+        $('#formKelas').val('');
+        $('#formJurusan').val('');
+        $('#formAlamat').val('');
+
+        if (siswa && typeof siswa === 'object') {
+            $('#studentFormTitle').text('Ubah Data Siswa');
+            $('#formStudentId').val(siswa.id);
+            $('#formNis').val(siswa.nis || '');
+            $('#formNama').val(siswa.nama || '');
+            $('#formKelas').val(siswa.kelas || '');
+            $('#formJurusan').val(siswa.jurusan || '');
+            $('#formAlamat').val(siswa.alamat || '');
+        } else {
+            $('#studentFormTitle').text('Tambah Siswa');
+            $('#formStudentId').val('');
+        }
+
+        $('#studentFormModal').removeClass('hidden');
+    }
+
+    function closeStudentFormModal() {
+        $('#studentFormModal').addClass('hidden');
+    }
+
+    function submitStudentForm() {
+        const id = $('#formStudentId').val();
+
+        const payload = {
+            nis: $('#formNis').val().trim(),
+            nama: $('#formNama').val().trim(),
+            kelas: $('#formKelas').val().trim(),
+            jurusan: $('#formJurusan').val().trim(),
+            alamat: $('#formAlamat').val().trim()
+        };
+
+        if (!payload.nis || !payload.nama || !payload.kelas || !payload.jurusan || !payload.alamat) {
+            showToast('Semua data siswa wajib diisi', false);
+            return;
+        }
+
+        if (id) {
+            updateStudent(id, payload);
+        } else {
+            createStudent(payload);
+        }
+    }
+
+    // =========================
+    // TOAST
+    // =========================
+    function showToast(msg, ok) {
+        const toast = $('#toast');
+        const icon = $('#toastIcon');
+
+        $('#toastMessage').text(msg);
+        icon.text(ok ? 'check_circle' : 'error');
+
+        icon.attr(
+            'class',
+            ok
+                ? 'material-symbols-outlined text-[16px] text-emerald-400'
+                : 'material-symbols-outlined text-[16px] text-red-400'
+        );
+
+        toast.removeClass('opacity-0 pointer-events-none').addClass('opacity-100');
+
+        setTimeout(function() {
+            toast.addClass('opacity-0 pointer-events-none').removeClass('opacity-100');
+        }, 2800);
+    }
+
+    // Saat halaman dibuka, langsung ambil data siswa.
+    $(document).ready(function() {
+        fetchStudents();
+    });
+</script>
+<!--  -->
+</body>
+</html>
